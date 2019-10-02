@@ -1,4 +1,3 @@
-
 #Normalize function
 normalize <- function(x) {
   return ((x - min(x)) / (max(x) - min(x)))
@@ -15,7 +14,7 @@ data_chosen_col <- data.frame(data[c(18,3,6)], data[19:20]) #Getting the relevan
 data_not_na <- na.omit(data_chosen_col) #remove rows with N/A
 data_normalized <- as.data.frame(lapply(data_not_na[2:5], normalize)) #normalize data (lapply: applies function to all data given in the data structure in the right function)
 
-data_train <- data_normalized[1:5500,]
+data_train <- data_normalized[1:5500,] #around 75%
 data_test <- data_normalized[5501:7032,]
 
 data_train_labels <- data_not_na[1:5500, 1] #returns a vector: data_train_labels[1:10]

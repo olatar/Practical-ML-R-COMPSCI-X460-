@@ -1,0 +1,57 @@
+---
+title: "Knn - Ola Tranum Arnegaard"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+# Knn
+##### -Predict PaymentMethod for induviduals by Telecompany bill features
+
+## Data
+The data consists of the Customer ID + 20 features for each customer. The dataset contains info about a Telecompany's customers. My goal was to predict a categorical variable from qualitative (and one (boolean) categorical) variables, based on a given Knn algorithm.
+
+## Functions
+Normalization:
+```{r}
+normalize <- function(x) {
+  return ((x - min(x)) / (max(x) - min(x)))
+}
+```
+## Code
+
+Read data:
+```{r}
+data <- read.csv("/Users/ola/Desktop/Fall2019/UC-Berkeley/Practical ML (R)/TelecompanyChurn/churn.csv", header = TRUE)
+```
+Choose the columns from the dataset that I wish to use. Initially, I only used the *MonthlyCharges* and *TotalCharges*, but the predictions were not good. Therefore, I added more variables. If desired, it is possible to choose additional features by adding more columns in the line below.
+```{r}
+data_chosen_col <- data.frame(data[c(18,3,6)], data[19:20])
+```
+Remove N/A cells as well as normalizing:
+```{r}
+data_not_na <- na.omit(data_chosen_col)
+data_normalized <- as.data.frame(lapply(data_not_na[2:5], normalize))
+```
+Separate into train and test sets (~75%/~25%):
+```{r}
+data_train <- data_normalized[1:5500,] #around 75%
+data_test <- data_normalized[5501:7032,]
+```
+Separate put the labels (the predictive unknown)
+```{r}
+data_train_labels <- data_not_na[1:5500, 1] #returns a vector: data_train_labels[1:10]
+data_test_labels <- data_not_na[5501:7032, 1]
+```
+Run Knn algorithm with k=75 (~sqrt(lenght(train_data))):
+```{r}
+library(class)
+prediction <- knn(train = data_train, test = data_test, cl = data_train_labels, k = 75)
+```
+See crosstable summary:
+```{r}
+library(gmodels)
+CrossTable(x = data_test_labels, y = prediction, prop.chisq = FALSE)
+```
+
+As seen in the table, the prediction is not very good, i.e. by running through all the training data for each of our test data, the distances to the (max_of)K nearest neighbours on our chosen set of features, does not predict the unknown variable,*PaymentMethod*, very well. One example is the predicted *BankTransfer (automatic)* category, where we correctly predicted 55 of a total of 180, but were supposed to predict a total of 335. Because this is a Knn algorithm, it is important to have features that group very well with the category we want to predict (high covariance/low normalized distance). Therefore, one possibility would be to add and remove different features from the full dataset to the ones we use in this script, and then look for improvements.
