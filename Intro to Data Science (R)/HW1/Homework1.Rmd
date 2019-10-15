@@ -1,0 +1,133 @@
+---
+title: "Homework 1"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+library(mosaic)
+library(babynames)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+--------------------------------------
+\begin{center}
+\textbf{Ola Tranum Arnegaard - 10/08/2019}
+\end{center}
+
+# Exercise 3.1
+### Intro
+Using the famous Galton data set from the mosaicData package:
+
+```{r}
+head(Galton)
+```
+\newpage
+#### 1. Create a scatterplot of each person's height against their father's height
+
+```{r}
+plot1 <- ggplot(Galton, aes(x = Galton$father, y = Galton$height)) + geom_point()
+plot1 <- plot1 + xlab("Father height") + ylab("Child")
+plot1
+```
+\newpage
+
+#### 2. Separate your plot into facets by sex
+
+```{r}
+plot1 <- plot1 + facet_wrap(Galton$sex,nrow=1,ncol=2)
+plot1
+```
+\newpage
+
+#### 3. Add regression lines to all of your facets
+
+```{r}
+plot1 <- plot1 + geom_smooth(method = 'auto')
+plot1
+```
+
+\newpage
+# Exercise 3.2
+### Intro
+Using the RailTrail data set from the mosaicData package:
+
+```{r}
+head(RailTrail)
+```
+\newpage
+
+#### 1. Create a scatterplot of the number of crossings per day volume against the high temperature that day
+
+```{r}
+plot2 <- ggplot(RailTrail, aes(x = RailTrail$hightemp, y = RailTrail$volume)) + geom_point()
+plot2 <- plot2 + xlab("Highest temperature") + ylab("Number of crossings")
+plot2
+```
+\newpage
+
+#### 2. Separate your plot into facets by \texttt{weekday}
+
+```{r}
+plot2 <- plot2 + facet_wrap(RailTrail$weekday,nrow=1,ncol=2)
+plot2
+```
+\newpage
+
+#### 3. Add regression lines to all of your facets
+
+```{r}
+plot2 <- plot2 + geom_smooth(method = 'auto')
+plot2
+```
+\newpage
+
+# Exercise 3.3
+
+Angelica Schuyler Church (1756{1814) was the daughter of New York Governer Philip Schuyler and sister of Elizabeth Schuyler Hamilton. Angelica, New York was named after her. Generate a plot of the reported **proportion of babies born with the name Angelica over time and interpret the figure.**
+
+```{r}
+head(babynames)
+```
+
+```{r}
+df <- as.data.frame(c(babynames[babynames$name=='Angelica','year'],babynames[babynames$name=='Angelica','prop']))
+
+plot3 <- ggplot(df, aes(x = df$year, y = df$prop)) + geom_point()
+plot3 <- plot3 + xlab("Year") + ylab("Proportion of babies born as Angelica")
+plot3
+```
+#### Result
+You see that it is a clear rise in the proportion of babies named Angelica throughout the second half of the ninenteenth century. However, throughout the 2000's the named have experienced a downfall.
+\newpage
+
+# Exercise 3.4
+
+### Intro
+The following questions use the Marriage data set from the mosaicData package.
+
+```{r}
+head(Marriage, 4)
+```
+\newpage
+
+#### 1. Create an informative and meaningful data graphic.
+
+```{r}
+plot4 <- ggplot(Marriage, aes(x = Marriage$age, y = Marriage$prevcount)) + geom_point(aes(color = prevconc)) + labs(color = "Reason for \nending marriage") + facet_wrap(Marriage$person,nrow=1,ncol=2)
+plot4 <- plot4 + xlab("Age") + ylab("Number of previous marriages")
+plot4
+```
+\newpage
+
+#### 2. Identify each of the visual cues that you are using, and describe how they are related to each variable.
+- Colors are used as a visual for the feature \texttt{reason for ending marriage}
+- Seperation of plot is used to seperate \texttt{brides} and \texttt{grooms}
+- Scatter plot is used to compare \texttt{previous marriages} and \texttt{age}
+
+#### 3. Create a data graphic with at least five variables (either quantitative or categorical). For the purposes of this exercise, do not worry about making your visualization meaningful|just try to encode five variables into one plot.
+
+```{r}
+plot4 + geom_point(size = 1.5, aes(color = prevconc,shape = race))
+```
+
+

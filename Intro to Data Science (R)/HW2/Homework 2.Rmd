@@ -1,0 +1,112 @@
+---
+title: "Homework 2"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr) #Select() and other fundamntal functions
+library(gmodels) #Crosstable page
+library(nycflights13)
+library(ggplot2)
+library(reticulate) #Python
+
+```
+
+--------------------------------------
+
+\begin{center}
+\textbf{Ola Tranum Arnegaard - 12/08/2019}
+\end{center}
+
+--------------------------------------
+
+\textit{\textbf{1)} Read Chapters 4 \newline\newline \textbf{2)} Please use the text book "Modern Data Science with R" and complete the following exercises: Chapter 4 Page 88  4.1,4.2,4.3,4.4}
+
+# Dataset:
+```{r}
+head(flights,3)
+head(planes,3)
+``` 
+
+# Exercise 4.1
+
+\textit{Each of these tasks can be performed using a single data verb. For each task, say which
+verb it is:}
+
+1. Find the average of one of the variables:
+```{}
+mean(var1)
+``` 
+2. Add a new column that is the ratio between two variables:
+```{}
+df %>% mutate(newCol, var1/var2)
+``` 
+3. Sort the cases in descending order of a variable.
+```{}
+df %>% arrange(desc(var1))
+``` 
+4. Create a new data table that includes only those cases that meet a criterion.
+```{}
+df %>% filter(var1 == criterion)
+``` 
+5. From a data table with three categorical variables A, B, and C, and a quantitative
+variable X, produce a data frame that has the same cases but only the variables A
+and X.
+```{}
+df %>% select(A,X)
+``` 
+
+# Exercise 4.2
+
+Use the \texttt{nycflights13} package and the \texttt{flights} data frame to answer the following questions: What month had the highest proportion of cancelled flights? What month had the lowest? Interpret any seasonal patterns.
+```{r}
+# Can't find any data for "cancelled flights"?
+# flights_sum <- flights %>% group_by(month) %>% 
+#                 summarize(prop_cancelled = {numer of cancelled flights each month}/n())
+``` 
+
+# Exercise 4.3
+
+Use the \texttt{nycflights13} package and the flights data frame to answer the following question: What plane (specified by the \texttt{tailnum} variable) traveled the most times from New York City airports in 2013? Plot the number of trips per week over the year.
+
+```{r}
+flights %>% filter(year == 2013 & origin == 'JFK') %>% 
+  group_by(tailnum) %>% summarize(number_of_trips = n())
+``` 
+Here we see that it is \texttt{tailnum} **N0EGMQ**
+```{r}
+flights_43 <- flights %>% filter(year == 2013 & origin == 'JFK' & tailnum == 'N0EGMQ')
+flights_43 <- flights_43 %>% mutate(week = as.numeric(strftime(time_hour, format = "%V")))
+flights_43_per_week <- flights_43 %>% group_by(week) %>% summarize(number_of_trips = n())
+
+plot <- ggplot(flights_43_per_week, aes(x = flights_43_per_week$week, y = flights_43_per_week$number_of_trips))
+plot <- plot + geom_bar(stat="identity", fill="steelblue") + xlab("Week number")
+plot <- plot + ylab("Number of trips") + ggtitle("Number of trips the given week - N0EGMQ")
+plot + theme_minimal()
+``` 
+
+# Exercise 4.4
+
+Use the \texttt{nycflights13} package and the flights and planes tables to answer the following questions: What is the oldest plane (specified by the tailnum variable) that flew from New York City airports in 2013? How many airplanes that flew from New York City are included in the planes table?
+
+```{r}
+flights_44 <- flights %>% filter(year == 2013 & origin == 'JFK')
+flights_44 <- flights_44 %>% inner_join(planes, by = c("tailnum" = "tailnum")) %>% arrange(year.y)
+head(select(flights_44, year.y, tailnum),1)
+``` 
+We see that the oldest plane that flew from JFK in 2013 was **N381AA** which is from **1956**
+```{r}
+planes_44 <- planes
+flights_44_2 <- flights %>% filter(origin == 'JFK') %>% left_join(planes_44, by = c("tailnum" = "tailnum"))
+flights_44_2_inc <- flights_44_2 %>% filter(!is.na(model) | !is.na(manufacturer)) #Are the joined columns empty? I.e. are there no math in flights_44_2 from planes?
+flights_44_2_not_inc <- flights_44_2 %>% filter(is.na(model) | is.na(manufacturer))
+
+nrow(flights_44_2_inc %>% group_by(tailnum)) #How many distinct different airplanes
+nrow(flights_44_2_not_inc %>% group_by(tailnum))
+``` 
+We see that a total of **94142** different planes that flew from \texttt{JFK} are included in the planes table and **17137** are not.
+
+
+
