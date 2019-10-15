@@ -2,8 +2,6 @@ GOTdata <- read.csv("/Users/ola/Desktop/Fall2019/UC-Berkeley/Practical ML (R)/Ga
 
 GOTchosen_data <- data.frame(GOTdata[c(14,1,5,6,10,15,18,19,24)])
 
-set.seed(123)
-train_sample <- sample(38, 32) #int [1:32] 31 15 14 3 36 25 26 27 5 19 ... Extract 32 random rows of 38
 
 GOT_train <- GOTchosen_data[train_sample, ]
 GOT_test <- GOTchosen_data[-train_sample, ]

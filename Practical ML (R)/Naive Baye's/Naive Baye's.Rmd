@@ -1,0 +1,112 @@
+---
+title: "Project 2 - Naive Baye's"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(e1071) #Naive Baye's algorithm package
+library(dplyr) #Select() and other fundamntal functions
+library(gmodels) #Crostable page
+
+Pokemon <- read.csv("./pokemon_alopez247.csv", header = TRUE) #Load data
+Pokemon <- Pokemon[sample(nrow(Pokemon)),] #Randomize rows
+
+# Select Catch_range-ranges given current max/min
+min_ <- min(Pokemon$Catch_Rate)
+max_ <- max(Pokemon$Catch_Rate)
+diff_ <- max_-min_
+Catch_range_set <- c(min_,min_+(1/6)*diff_,min_+(2/6)*diff_,min_+(3/6)*diff_,min_+(4/6)*diff_,min_+(5/6)*diff_,max_)
+Pokemon$Catch_Rate_Cat <- cut(Pokemon$Catch_Rate, Catch_range_set) # Create new column
+
+# Select Attack given current max/min
+min_ <- min(Pokemon$Attack)
+max_ <- max(Pokemon$Attack)
+diff_ <- max_-min_
+Attack_set <- c(min_,min_+(1/6)*diff_,min_+(2/6)*diff_,min_+(3/6)*diff_,min_+(4/6)*diff_,min_+(5/6)*diff_,max_)
+Pokemon$Attack_Cat <- cut(Pokemon$Attack, Attack_set) # Create new column
+
+# Select Total given current max/min
+min_ <- min(Pokemon$Total)
+max_ <- max(Pokemon$Total)
+diff_ <- max_-min_
+Total_set <- c(min_,min_+(1/6)*diff_,min_+(2/6)*diff_,min_+(3/6)*diff_,min_+(4/6)*diff_,min_+(5/6)*diff_,max_)
+Pokemon$Total_Cat <- cut(Pokemon$Total, Total_set) # Create new column
+
+Pokemon <- select(Pokemon,isLegendary,Name,Type_1,Color,hasGender,Egg_Group_1,hasMegaEvolution,Body_Style,Catch_Rate_Cat,Total_Cat)
+```
+
+--------------------------------------
+
+\begin{center}
+\textbf{Ola Tranum Arnegaard - 10/08/2019}
+\end{center}
+
+--------------------------------------
+
+\textit{\textbf{Naive Baye's Implementation:} Please implement the Naive Baye's algorithm and submit the deliverables as specified in the project rubric document under Modules.}
+
+# Intro
+Use Naive Baye's to predict if \texttt{isLegendary} is **True** for a Pokemon given its other features.
+
+### Preprocessing
+- All Pokemon are randomized (rows)
+- Only included categorical features
+- Catch_Rate_Cat and Total_Cat are created from numerical to categorical variables arranged with respect to their given max and min values.
+- Removed categorical features that are clearly dependent on eachother
+
+This is what the data looks like:
+```{r}
+head(Pokemon,3)
+```
+
+# Implementation
+### Create Model
+```{r}
+train_data <- Pokemon[1:675,-c(1,2)] #Train data (no names or labels)
+train_labels <- Pokemon[1:675,1] #Corresponding prediction labels
+Pokemon_NB_model <- naiveBayes(train_data, train_labels) #Create model
+```
+
+### Prediction
+
+```{r}
+test_data <- Pokemon[676:721,-c(1,2)] #Corresponding to the training data
+test_labels <- Pokemon[676:721,1] #Actual labels
+Pokemon_NB_prediction <- predict(Pokemon_NB_model, test_data) #Predicted labels
+
+CrossTable(Pokemon_NB_prediction, test_labels,
+           prop.chisq = FALSE, prop.t = FALSE, dnn = c('predicted', 'actual'))
+```
+# Results
+Because the dataset is randomized, the results are different from every compilation. However, in most examples, the predictions are close to 100% correct.
+In one compilation, we predicted 5 legendary Pokemon correctly; however, we also predicted one to incorrectly be legendary (total of 6). In conclusion, we predicted 83.3% correctly for \texttt{isLegendary} **True** and correspondingly 97.6% \texttt{isLegendary} correctly to be **False**.
+
+#### Prediction model
+
+- Our prediction picks **True** or **False** for \texttt{isLegendary} based on which has highest \texttt{posterior probability}.
+- This probability is calculated as follows $$P(\texttt{isLegendary} | feat1, feat2,...featN) = \frac{P(feat1, feat2,...featN | \texttt{isLegendary})P(\texttt{isLegendary})}{P(feat1, feat2,...featN)}$$
+- Our \textit{prior and conditional probabilities} as well as our \textit{likelihood} of \texttt{isLegendary} are calculated in the model which we use in our prediction. This can be seen below:
+
+```{r}
+Pokemon_NB_model
+```
+### Extras
+For those interested, it is also interesting to see which Pokemon that were actually and mistakenly predicted to \texttt{isLegendary} from the test data.
+```{r}
+Names = as.data.frame(Pokemon[676:721,2]) #Select the test data names
+Names$actually = test_labels #Actual boolean isLegendary values
+Names$predicted = as.data.frame(Pokemon_NB_prediction) #Predicted isLegendary
+```
+#### - Actually \texttt{isLegendary}:
+```{r}
+Names[Names$actually=='True',1] #Names that isLegendary
+```
+#### - Predicted \texttt{isLegendary}:
+```{r}
+Names[Names$predicted=='True',1] #Names predicted isLegendary
+```
+
+
+

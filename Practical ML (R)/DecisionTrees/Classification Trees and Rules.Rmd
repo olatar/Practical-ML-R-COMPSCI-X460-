@@ -1,0 +1,79 @@
+---
+title: "Project 3 - Classification Trees and Rules"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(C50) #Classification trees algorithm package (c5.0)
+library(dplyr) #Select() and other fundamntal functions
+library(gmodels) #Crosstable page
+library(tree)
+
+IRIS_data <- read.csv("./IRIS.csv", header = TRUE,sep = " ") #Seperated by " "
+#IRIS_data <- IRIS_data[sample(nrow(IRIS_data)),] #Randomize rows
+#write.table(IRIS_data,"./IRIS.csv",col.names = TRUE,sep = ",") #Save to file
+```
+
+--------------------------------------
+
+\begin{center}
+\textbf{Ola Tranum Arnegaard - 12/08/2019}
+\end{center}
+
+--------------------------------------
+
+\textit{\textbf{Classification Trees or Rules Implementation:} Please implement  the Classification Trees or Rules algorithm and submit the deliverables as specified in the project rubric document under Modules.}
+
+# Intro
+
+Use Classification Trees *(c5.0)* to predict correctly from 3 flower \texttt{species} from 4 features given by \texttt{IRIS}_data .
+
+### Preprocessing
+
+- Loaded data as \texttt{IRIS}_data from same directory
+- Randomized all \texttt{IRIS}_data (rows)
+
+This is what the data looks like:
+```{r}
+head(IRIS_data,5)
+```
+
+# Implementation
+### Create Model
+```{r}
+train_IRIS <- as.data.frame(IRIS_data[1:125,-5]) #Train data (no names or labels)
+train_labels <- as.data.frame(IRIS_data[1:125,5]) #Corresponding prediction labels
+
+IRIS_model <- C5.0(train_IRIS, train_labels[,1]) #Create model
+```
+
+### Prediction
+
+```{r}
+test_IRIS <- IRIS_data[126:nrow(IRIS_data),-5] #Corresponding to the training data
+test_labels <- IRIS_data[126:nrow(IRIS_data),5] #Actual labels
+
+IRIS_predictions <- predict(IRIS_model, test_IRIS) #Predicted labels
+
+CrossTable(IRIS_predictions, test_labels,
+           prop.chisq = FALSE, prop.t = FALSE, dnn = c('predicted', 'actual'))
+```
+# Results
+We have 3 different flowers to predict. As we see in the crosstable above, 2 \texttt{Iris-versicolor} and 3 \texttt{Iris-virginica} are predicted wrong, with an accuracy of 71% and 70% respectfully: 2 pedicted \texttt{Iris-versicolor} should have been 2 \texttt{Iris-setosa} and 3 \texttt{Iris-virginica} should have been \texttt{Iris-versicolor}. 
+
+#### Decision tree
+
+- From start to completion, our model will continuosly calculate the split that has the highest *information gain* and use that as the next split, i.e. the split that that gives the highest difference in **entropy**. $$inf. gain=\sum_{before\,split}{-p_i\log_2p_i}-\sum_{after\,split}{-p_i\log_2p_i}$$.
+- It is important to not split excessively because it may lead to overfitting. However, as for most classification algorithms and predictors, its always a tradeoff between having a model that is overly generalized and a model that is overfitted. To solve this, we often use either *pre-pruning* or *post-pruning*, that is, respectively, give a fixed number of allowed splits before termination or complete the algorithm and afterwards remove insignifficant splits.
+- Our model uses *post-prining*
+- Below we can see a summary of our model: only 3 splits long but with a accuracy of 98.4% on our training data. This is substantially higher than our predictions, and therefore, one may wonder if the model is overfitted. However, since we only use 3 splits, it is most likely not.
+- Most of the wrong predicitions come from \texttt{Iris-virginica} that really are \texttt{Iris-versicolor}. Not surprisingly, we can see from our model that all of the errors come from the same mistake.
+```{r}
+summary(IRIS_model)
+```
+
+
+
+

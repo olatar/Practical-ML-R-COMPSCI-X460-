@@ -1,0 +1,82 @@
+---
+title: "Project 1 - k-NN Implementation"
+author: "X167441 - Ola Tranum Arnegaard"
+date: "10/03/2019"
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+# Introduction
+Use k-NN to predict PaymentMethods for a Telecompany's customers given other bill features.
+
+# Data
+The data consists of the Customer ID + 20 features for each customer. The dataset contains info about a Telecompany's customers. My goal was to predict a categorical variable from qualitative (and one (boolean) categorical) variables, based on a given Knn algorithm.
+
+### Functions
+
+- Normalization:
+```{r}
+normalize <- function(x) {
+  return ((x - min(x)) / (max(x) - min(x)))
+}
+```
+
+### Preprocessing
+
+- Read data:
+```{r}
+data <- read.csv("/Users/ola/Desktop/Fall2019/UC-Berkeley/Practical ML (R)/TelecompanyChurn/churn.csv", header = TRUE)
+```
+- Select columns:
+
+Choose the desired columns from the dataset. Initially, I used the *MonthlyCharges* and *TotalCharges*; however, later, I added more variables. If desired, more features may also be added.
+```{r}
+data_chosen_col <- data.frame(data[c(18,3,6)], data[19:20])
+```
+- Remove N/A cells:
+```{r}
+data_not_na <- na.omit(data_chosen_col)
+```
+#### Example:
+```{r, echo=FALSE, results='asis'}
+knitr::kable(head(data_chosen_col, 5))
+```
+
+# k-NN implementation
+
+- Normalization:
+
+Because the k-NN algorithm use the distance between the data points as scores, it is important that all distances are normalized.
+```{r}
+data_normalized <- as.data.frame(lapply(data_not_na[2:5], normalize))
+```
+- Train and test sets (~75% / ~25%):
+```{r}
+data_train <- data_normalized[1:5500,] #around 75%
+data_test <- data_normalized[5501:7032,]
+```
+- Separate the labels (the predictive unknown category):
+```{r}
+data_train_labels <- data_not_na[1:5500, 1] #returns a vector: data_train_labels[1:10]
+data_test_labels <- data_not_na[5501:7032, 1]
+```
+- k-NN algorithm with k=75 $\sqrt{\texttt{lenght}(data_{train})}$:
+```{r}
+library(class)
+prediction <- knn(train = data_train, test = data_test, cl = data_train_labels, k = 75)
+```
+- Crosstable summary:
+```{r}
+library(gmodels)
+CrossTable(x = data_test_labels, y = prediction, prop.chisq = FALSE)
+```
+
+# Result
+- As seen in the crosstable, the predictions are not accurate, i.e. by running through all the training data for each of our test data, the distances to the K nearest neighbours on our chosen set of features, does not predict the unknown variable, **PaymentMethod**, very well.
+
+- One example is the predicted **BankTransfer (automatic)** category, where we correctly predicted 55 of a total of 180, but was supposed to predict a total of 335. Because this is a k-NN algorithm, it is important to have features that group very well with the category we want to predict (high covariance/low normalized distance). Therefore, one possibility would be to add and remove different features from the full dataset to the ones we use in this script, and then look for features that might improve our predictions.
